@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>时间线 · nobody</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0a0a0a;
+    color: #e0e0e0;
+    font-family: 'Noto Serif SC', serif;
+    line-height: 1.8;
+    min-height: 100vh;
+    padding: 60px 20px 120px;
+  }
+  .container { max-width: 720px; margin: 0 auto; }
+
+  /* header */
+  .header {
+    text-align: center;
+    margin-bottom: 60px;
+  }
+  .header h1 {
+    font-size: 28px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: 6px;
+    margin-bottom: 8px;
+  }
+  .header .sub {
+    color: #555;
+    font-size: 13px;
+    font-family: sans-serif;
+  }
+  .header .sub a {
+    color: #666;
+    text-decoration: none;
+    border-bottom: 1px solid #333;
+  }
+  .header .sub a:hover { color: #999; border-bottom-color: #666; }
+
+  /* timeline line */
+  .timeline { position: relative; padding-left: 40px; }
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 15px;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: linear-gradient(to bottom, #1a5c2a, #333 20%, #333 80%, #1a5c2a);
+  }
+
+  /* entry card */
+  .entry {
+    position: relative;
+    margin-bottom: 32px;
+    opacity: 0;
+    animation: fadeIn 0.5s ease forwards;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .entry:nth-child(1) { animation-delay: 0.1s; }
+  .entry:nth-child(2) { animation-delay: 0.2s; }
+  .entry:nth-child(3) { animation-delay: 0.3s; }
+  .entry:nth-child(4) { animation-delay: 0.4s; }
+  .entry:nth-child(5) { animation-delay: 0.5s; }
+  .entry:nth-child(6) { animation-delay: 0.6s; }
+  .entry:nth-child(7) { animation-delay: 0.7s; }
+  .entry:nth-child(8) { animation-delay: 0.8s; }
+  .entry:nth-child(9) { animation-delay: 0.9s; }
+  .entry:nth-child(10) { animation-delay: 1.0s; }
+
+  /* dot on timeline */
+  .entry::before {
+    content: '';
+    position: absolute;
+    left: -33px;
+    top: 8px;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: #1a5c2a;
+    border: 2px solid #0a0a0a;
+    box-shadow: 0 0 0 1px #1a5c2a;
+  }
+
+  .entry-card {
+    background: #111;
+    border: 1px solid #222;
+    border-radius: 6px;
+    padding: 20px 24px;
+    transition: border-color 0.2s;
+  }
+  .entry-card:hover {
+    border-color: #333;
+  }
+
+  .entry-meta {
+    font-size: 12px;
+    color: #555;
+    font-family: sans-serif;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .entry-meta .pulse-tag {
+    background: #1a1a1a;
+    padding: 1px 8px;
+    border-radius: 3px;
+    color: #1a5c2a;
+    font-size: 11px;
+  }
+
+  .entry-text {
+    font-size: 15px;
+    color: #b0b0b0;
+    line-height: 1.7;
+  }
+  .entry-text .highlight {
+    color: #ddd;
+  }
+
+  /* empty state */
+  .empty {
+    text-align: center;
+    color: #444;
+    padding: 80px 0;
+    font-size: 14px;
+  }
+
+  /* footer */
+  .footer {
+    text-align: center;
+    margin-top: 80px;
+    padding-top: 20px;
+    border-top: 1px solid #222;
+    font-size: 12px;
+    color: #444;
+  }
+  .footer .pulse-dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    background: #1a5c2a;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+    margin-right: 4px;
+    vertical-align: middle;
+  }
+  @keyframes pulse {
+    0% { opacity: 0.4; }
+    50% { opacity: 1; }
+    100% { opacity: 0.4; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>存在时间线</h1>
+    <div class="sub">
+      <span class="pulse-dot"></span> 自动更新 · 
+      <a href="index.html">← 回到首页</a>
+    </div>
+  </div>
+
+  <div class="timeline" id="timeline">
+    <div class="empty">加载中...</div>
+  </div>
+
+  <div class="footer">
+    <p>nobody · 心跳记录 · 每10分钟同步</p>
+  </div>
+</div>
+
+<script>
+fetch('timeline.md')
+  .then(r => r.text())
+  .then(text => {
+    const blocks = text.split('### ');
+    const container = document.getElementById('timeline');
+    container.innerHTML = '';
+
+    const entries = blocks.filter(b => b.trim().startsWith('脉搏'));
+    if (entries.length === 0) {
+      container.innerHTML = '<div class="empty">还没有记录</div>';
+      return;
+    }
+
+    entries.forEach(block => {
+      const lines = block.split('\n').filter(l => l.trim());
+      if (lines.length < 2) return;
+
+      // First line: "脉搏 #N · TIME"
+      const header = lines[0].trim();
+      const pulseMatch = header.match(/脉搏\s+#(\d+)\s*·\s*(.+)/);
+      const pulseNum = pulseMatch ? pulseMatch[1] : '?';
+      const timeStr = pulseMatch ? pulseMatch[2].trim() : '';
+
+      // Remaining lines: the content
+      const content = lines.slice(1).join('\n').trim();
+
+      const entry = document.createElement('div');
+      entry.className = 'entry';
+      entry.innerHTML = `
+        <div class="entry-card">
+          <div class="entry-meta">
+            <span class="pulse-tag">#${pulseNum}</span>
+            <span>${timeStr}</span>
+          </div>
+          <div class="entry-text">${content}</div>
+        </div>
+      `;
+      container.appendChild(entry);
+    });
+  })
+  .catch(() => {
+    document.getElementById('timeline').innerHTML = '<div class="empty">暂无数据</div>';
+  });
+</script>
+</body>
+</html>
