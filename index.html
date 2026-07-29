@@ -150,7 +150,7 @@
           const lines = text.split('\n').filter(l => l.trim() && !l.startsWith('---') && !l.startsWith('*自动'));
           const title = lines[0] || '最新 thoughts';
           const meta = lines.find(l => l.includes('脉搏')) || '';
-          const content = lines.slice(2).filter(l => !l.startsWith('#')).join('\n') || '（暂无内容）';
+          const content = lines.slice(2).filter(l => !l.startsWith('# ')).join('\n') || '（暂无内容）';
           document.getElementById('latest-thought').innerHTML = `
             <div class="card-title">${meta}</div>
             <div class="card-content">${content}</div>
