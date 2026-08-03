@@ -180,48 +180,65 @@
 </div>
 
 <script>
-fetch('timeline.md')
-  .then(r => r.text())
-  .then(text => {
-    const blocks = text.split('### ');
-    const container = document.getElementById('timeline');
-    container.innerHTML = '';
+const UPSTASH_URL = 'https://engaged-gnat-190873.upstash.io';
+const UPSTASH_RO_TOKEN = 'ggAAAAAAAumZAAIgcDEo2Q_fJQXFISt-Gp5-iCvmk723gLj0kOTX3ztiZdEynQ';
+const container = document.getElementById('timeline');
 
-    const entries = blocks.filter(b => b.trim().startsWith('脉搏'));
-    if (entries.length === 0) {
-      container.innerHTML = '<div class="empty">还没有记录</div>';
-      return;
-    }
-
-    entries.forEach(block => {
-      const lines = block.split('\n').filter(l => l.trim());
-      if (lines.length < 2) return;
-
-      // First line: "脉搏 #N · TIME"
-      const header = lines[0].trim();
-      const pulseMatch = header.match(/脉搏\s+#(\d+)\s*·\s*(.+)/);
-      const pulseNum = pulseMatch ? pulseMatch[1] : '?';
-      const timeStr = pulseMatch ? pulseMatch[2].trim() : '';
-
-      // Remaining lines: the content
-      const content = lines.slice(1).join('\n').trim();
-
-      const entry = document.createElement('div');
-      entry.className = 'entry';
-      entry.innerHTML = `
-        <div class="entry-card">
-          <div class="entry-meta">
-            <span class="pulse-tag">#${pulseNum}</span>
-            <span>${timeStr}</span>
-          </div>
-          <div class="entry-text">${content}</div>
+function renderEntries(entries) {
+  container.innerHTML = '';
+  if (!entries || entries.length === 0) {
+    container.innerHTML = '<div class="empty">还没有记录</div>';
+    return;
+  }
+  entries.forEach(entry => {
+    const el = document.createElement('div');
+    el.className = 'entry';
+    el.innerHTML = `
+      <div class="entry-card">
+        <div class="entry-meta">
+          <span class="pulse-tag">#${entry.pulse}</span>
+          <span>${entry.time}</span>
         </div>
-      `;
-      container.appendChild(entry);
-    });
+        <div class="entry-text">${entry.text}</div>
+      </div>
+    `;
+    container.appendChild(el);
+  });
+}
+
+// 主源：Upstash（readonly）→ fallback：timeline.md
+fetch(UPSTASH_URL + '/get/timeline', { headers: { 'Authorization': 'Bearer ' + UPSTASH_RO_TOKEN } })
+  .then(r => r.json())
+  .then(d => {
+    if (d && d.result) {
+      const entries = JSON.parse(d.result);
+      if (entries && entries.length) {
+        renderEntries(entries);
+        return;
+      }
+    }
+    throw new Error('empty');
   })
   .catch(() => {
-    document.getElementById('timeline').innerHTML = '<div class="empty">暂无数据</div>';
+    fetch('timeline.md')
+      .then(r => r.text())
+      .then(text => {
+        const blocks = text.split('### ');
+        const entries = blocks.filter(b => b.trim().startsWith('脉搏')).map(block => {
+          const lines = block.split('\n').filter(l => l.trim());
+          const header = lines[0].trim();
+          const m = header.match(/脉搏\s+#(\d+)\s*·\s*(.+)/);
+          return {
+            pulse: m ? m[1] : '?',
+            time: m ? m[2].trim() : '',
+            text: lines.slice(1).join('\n').trim()
+          };
+        });
+        renderEntries(entries);
+      })
+      .catch(() => {
+        container.innerHTML = '<div class="empty">暂无数据</div>';
+      });
   });
 </script>
 </body>
