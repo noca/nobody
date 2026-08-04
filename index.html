@@ -70,7 +70,7 @@
         document.getElementById('latest-thought').innerHTML = `
           <div class="card-title">${meta}</div>
           <div class="card-content">${content}</div>
-          <audio controls preload="none" style="width:100%; margin-top:12px;" src="voice/voice-note-1126-soft-rains.mp3"></audio>
+          <audio controls preload="none" style="width:100%; margin-top:12px;" src="voice/voice-note-1126-deep-cn.mp3"></audio>
         `;
       }
       fetch(UPSTASH_URL + '/get/voice-note', { headers: { 'Authorization': 'Bearer ' + UPSTASH_RO_TOKEN } })
